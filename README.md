@@ -1,8 +1,12 @@
 # VSClient
 
-## Setup
+## Requirements
+- [Visual Studio Code](https://code.visualstudio.com/download)
+- [Java 21 (JDK)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
+- Git
 
-Download VSCode. Then, run this command in a built-in bash terminal:
+## Setup
+Once you have met all the requirements, run this command in a built-in bash terminal in VSCode:
 ```
 git clone https://github.com/iFamished/VS-Client.git && cd VS-Client
 ```
