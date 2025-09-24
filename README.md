@@ -19,6 +19,12 @@ Once you have met all the requirements, run this command:
 ```
 git clone https://github.com/iFamished/VS-Client.git && cd VS-Client
 ```
+
+## Or, use option 2:
+```
+git clone https://github.com/iFamished/VS-Client.git && cd VS-Client && unset JAVA_HOME
+```
+
 After the repository is cloned, you can launch the game. Launch using this command:
 ```
 ./gradlew runClient
