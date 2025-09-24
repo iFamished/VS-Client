@@ -2,11 +2,11 @@
 
 ## Setup
 
-Download VSCode. Then, paste this command:
+Download VSCode. Then, run this command in a built-in bash terminal:
 ```
 git clone https://github.com/iFamished/VS-Client.git && cd VS-Client
 ```
-After the repository is cloned, you can launch the game. Launch using this command:
+After the repository is cloned, you can launch the game. Launch using this command in a bash terminal:
 ```
 ./gradlew runClient
 ```
