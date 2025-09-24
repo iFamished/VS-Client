@@ -16,6 +16,6 @@ And you're good to go. To add mods, drop mods into the Mod Menu.
 
 ## Credits and license
 
-Huge thank you to everyone who has developed and built the mods and resourcepacks pre-installed in this modpack.
+Huge thank you to everyone who has developed and built the mods pre-installed in this modpack.
 
 This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
