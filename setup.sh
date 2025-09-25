@@ -22,7 +22,25 @@ sdk use java 21.0.1-tem
 export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
 export PATH="$JAVA_HOME/bin:$PATH"
 
-# Step 5: Persist to shell config (shell-agnostic)
+# Step 5: Install jq if missing
+if ! command -v jq >/dev/null 2>&1; then
+  echo "📦 Installing jq..."
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    sudo apt update && sudo apt install -y jq
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    if command -v brew >/dev/null 2>&1; then
+      brew install jq
+    else
+      echo "❌ Homebrew not found. Please install jq manually."
+    fi
+  else
+    echo "❌ Unsupported OS for auto-installing jq. Please install manually."
+  fi
+else
+  echo "✅ jq is already installed"
+fi
+
+# Step 6: Persist JAVA_HOME and PATH to shell config
 for shellrc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; do
   if [ -f "$shellrc" ]; then
     grep -qxF "export JAVA_HOME=\"$JAVA_HOME\"" "$shellrc" || echo "export JAVA_HOME=\"$JAVA_HOME\"" >> "$shellrc"
@@ -31,6 +49,7 @@ for shellrc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; 
     echo "alias start='bash $(pwd)/start.sh'" >> "$shellrc"
     echo "alias import-mods='bash $(pwd)/import-mods.sh'" >> "$shellrc"
     echo "alias import-mrpack='bash $(pwd)/import-mrpack.sh'" >> "$shellrc"
+    echo "alias doctor='bash $(pwd)/doctor.sh'" >> "$shellrc"
     echo "alias reset='bash $(pwd)/reset.sh'" >> "$shellrc"
     echo "alias preview='bash $(pwd)/preview.sh'" >> "$shellrc"
     echo "alias update-mods='bash $(pwd)/update-mods.sh'" >> "$shellrc"
@@ -42,7 +61,7 @@ done
 
 echo "✅ Java 21 installed and aliases added"
 
-# Step 6: Detect OS and save to .osinfo
+# Step 7: Detect OS and save to .osinfo
 if [[ "$OS" == "Windows_NT" ]] || grep -q Microsoft /proc/version 2>/dev/null; then
   echo "windows" > .osinfo
 else
@@ -50,7 +69,7 @@ else
 fi
 echo "💻 OS detected and saved to .osinfo"
 
-# Step 7: Ensure mods/ and run/ folders exist
+# Step 8: Ensure mods/ and run/ folders exist
 mkdir -p mods run
 echo "📁 Ensured mods/ and run/ folders exist"
 
