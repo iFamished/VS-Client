@@ -45,8 +45,8 @@ if [ -z "$MOD_URL" ] || [ "$MOD_URL" = "null" ]; then
   exit 1
 fi
 
-echo "🧩 Found mod: $MOD_FILE"
-read -p "⬇️ Install '$MOD_FILE'? (y/N): " confirm
+echo "🧩 Mod found"
+read -p "⬇️ Proceed with installation? (y/N): " confirm
 [[ "$confirm" != "y" && "$confirm" != "Y" ]] && echo "❌ Cancelled" && exit 0
 
 mkdir -p mods
@@ -55,6 +55,6 @@ echo "✅ Installed: $MOD_FILE"
 
 for dep in $DEPENDENCIES; do
   echo "📦 Dependency: $dep"
-  read -p "⬇️ Install '$dep'? (y/N): " dep_confirm
+  read -p "⬇️ Install dependency '$dep'? (y/N): " dep_confirm
   [[ "$dep_confirm" == "y" || "$dep_confirm" == "Y" ]] && bash bin/install-mod.sh "$dep" "$LOADER" "$MC_VERSION"
 done
