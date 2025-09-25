@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Detect OS and set Downloads path
 OS=$(cat .osinfo)
 DOWNLOADS="$HOME/Downloads"
 [[ "$OS" == "windows" ]] && DOWNLOADS="/mnt/c/Users/$USERNAME/Downloads"
@@ -13,13 +14,22 @@ find "$DOWNLOADS" -maxdepth 1 -iname "*.mrpack" | while read -r PACK; do
   echo "📦 Unpacking $PACK..."
   mkdir -p "$TEMP"
   unzip -o "$PACK" -d "$TEMP" > /dev/null
+  chmod -R u+rw "$TEMP"
 
-  # Validate Minecraft version using grep
+  # Check if modrinth.index.json exists
+  INDEX="$TEMP/modrinth.index.json"
+  if [ ! -f "$INDEX" ]; then
+    echo "❌ Skipping $PACK — missing modrinth.index.json"
+    rm -rf "$TEMP"
+    continue
+  fi
+
+  # Validate Minecraft version
   VERSION_LINE=$(grep -E '"gameVersions":\s*
 
 \[.*\]
 
-' "$TEMP/modrinth.index.json")
+' "$INDEX")
   if ! echo "$VERSION_LINE" | grep -q "1.21.8"; then
     echo "❌ Skipping $PACK — incompatible Minecraft version"
     rm -rf "$TEMP"
@@ -32,10 +42,11 @@ find "$DOWNLOADS" -maxdepth 1 -iname "*.mrpack" | while read -r PACK; do
       mkdir -p "$RUN/$folder"
       for ITEM in "$TEMP/$folder"/*; do
         BASENAME=$(basename "$ITEM")
-        if [ -f "$RUN/$folder/$BASENAME" ]; then
+        TARGET="$RUN/$folder/$BASENAME"
+        if [ -f "$TARGET" ]; then
           echo "⚠️ Skipping duplicate: $BASENAME already exists in $RUN/$folder"
         else
-          mv "$ITEM" "$RUN/$folder/"
+          mv "$ITEM" "$TARGET"
           echo "✅ Imported: $BASENAME → $RUN/$folder/"
         fi
       done
