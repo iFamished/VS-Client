@@ -4,7 +4,33 @@
 unset JAVA_HOME
 echo "🧼 JAVA_HOME cleared"
 
-# Step 2: Detect OS and save to .osinfo
+# Step 2: Install SDKMAN if not present
+if [ ! -d "$HOME/.sdkman" ]; then
+  echo "📦 Installing SDKMAN..."
+  curl -s "https://get.sdkman.io" | bash
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+else
+  source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
+
+# Step 3: Install Java 21 if not present
+if ! sdk list java | grep -q "21.*-tem"; then
+  echo "☕ Installing Java 21..."
+  sdk install java 21.0.1-tem
+fi
+
+# Step 4: Set JAVA_HOME and update shell config
+export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
+export PATH="$JAVA_HOME/bin:$PATH"
+
+# Add to shell config if not already present
+CONFIG="$HOME/.zshrc"
+grep -qxF "export JAVA_HOME=\"$JAVA_HOME\"" "$CONFIG" || echo "export JAVA_HOME=\"$JAVA_HOME\"" >> "$CONFIG"
+grep -qxF "export PATH=\"\$JAVA_HOME/bin:\$PATH\"" "$CONFIG" || echo "export PATH=\"\$JAVA_HOME/bin:\$PATH\"" >> "$CONFIG"
+
+echo "✅ Java 21 installed and JAVA_HOME set"
+
+# Step 5: Detect OS and save to .osinfo
 if [[ "$OS" == "Windows_NT" ]] || grep -q Microsoft /proc/version 2>/dev/null; then
   echo "windows" > .osinfo
 else
@@ -12,10 +38,10 @@ else
 fi
 echo "💻 OS detected and saved to .osinfo"
 
-# Step 3: Create aliases
-echo "alias start='bash $(pwd)/start.sh'" >> ~/.zshrc
-echo "alias import-mods='bash $(pwd)/import-mods.sh'" >> ~/.zshrc
-echo "alias import-mrpack='bash $(pwd)/import-mrpack.sh'" >> ~/.zshrc
-source ~/.zshrc
+# Step 6: Create aliases
+echo "alias start='bash $(pwd)/start.sh'" >> "$CONFIG"
+echo "alias import-mods='bash $(pwd)/import-mods.sh'" >> "$CONFIG"
+echo "alias import-mrpack='bash $(pwd)/import-mrpack.sh'" >> "$CONFIG"
+source "$CONFIG"
 
 echo "✅ Setup complete. You can now use: start, import-mods, import-mrpack"
