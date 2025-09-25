@@ -4,12 +4,12 @@
 
 **Important!! Use the built-in bash terminal in VSCode to run all the below commands.**
 ```
-git clone https://github.com/iFamished/VS-Client.git && cd VS-Client && unset JAVA_HOME
+git clone https://github.com/iFamished/VS-Client.git && cd VS-Client && unset JAVA_HOME && source start.sh
 ```
 
 After the repository is cloned, you can launch the game using this command:
 ```
-./gradlew runClient
+start
 ```
 And you're good to go. To add mods, drop mods into the Mod Menu.
 
