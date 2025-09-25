@@ -13,13 +13,10 @@ else
   source "$HOME/.sdkman/bin/sdkman-init.sh"
 fi
 
-# Step 3: Install Java 21 if not present
-if ! sdk list java | grep -q "21.*-tem"; then
-  echo "☕ Installing Java 21..."
-  sdk install java 21.0.1-tem
-else
-  sdk use java 21.0.1-tem
-fi
+# Step 3: Install Java 21 and activate it
+echo "☕ Installing Java 21..."
+sdk install java 21.0.1-tem
+sdk use java 21.0.1-tem
 
 # Step 4: Set JAVA_HOME and PATH
 export JAVA_HOME="$HOME/.sdkman/candidates/java/current"
