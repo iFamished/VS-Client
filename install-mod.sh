@@ -18,6 +18,7 @@ if [[ "$MOD_INPUT" == https://modrinth.com/mod/* ]]; then
   VERSION_DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_SLUG/version/$VERSION_SLUG")
   MOD_URL=$(echo "$VERSION_DATA" | jq -r '.files[0].url')
   MOD_FILE=$(basename "$MOD_URL")
+  DEPENDENCIES=$(echo "$VERSION_DATA" | jq -r '.dependencies[]?.project_id')
 else
   echo "🔍 Searching Modrinth for '$MOD_INPUT'..."
   MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$MOD_INPUT" | jq -r '.hits[0].project_id')
@@ -27,7 +28,7 @@ else
     exit 1
   fi
 
-  echo "📋 Fetching available versions..."
+  echo "📋 Fetching latest matching version..."
   VERSIONS=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID/version")
 
   FILTER=".[]"
@@ -38,26 +39,19 @@ else
     FILTER="$FILTER | select(.game_versions[] == \"$MC_VERSION\")"
   fi
 
-  MATCHED=$(echo "$VERSIONS" | jq "$FILTER")
+  MATCHED=$(echo "$VERSIONS" | jq "$FILTER" | head -1)
 
-  COUNT=$(echo "$MATCHED" | jq length)
-  if [ "$COUNT" -eq 0 ]; then
-    echo "❌ No matching versions found"
-    exit 1
-  fi
-
-  echo "🧩 Select a version to install:"
-  echo "$MATCHED" | jq -r '.[].name' | nl -w2 -s'. '
-
-  read -p "Enter version number (1-$COUNT): " choice
-  INDEX=$((choice - 1))
-
-  MOD_URL=$(echo "$MATCHED" | jq -r ".[$INDEX].files[0].url")
+  MOD_URL=$(echo "$MATCHED" | jq -r '.files[0].url')
   MOD_FILE=$(basename "$MOD_URL")
-  DEPENDENCIES=$(echo "$MATCHED" | jq -r ".[$INDEX].dependencies[]?.project_id")
+  DEPENDENCIES=$(echo "$MATCHED" | jq -r '.dependencies[]?.project_id')
 fi
 
-echo "🧩 Selected mod: $MOD_FILE"
+if [ -z "$MOD_URL" ]; then
+  echo "❌ No matching version found for '$MOD_INPUT'"
+  exit 1
+fi
+
+echo "🧩 Found mod: $MOD_FILE"
 read -p "⬇️ Install '$MOD_FILE' into your mods folder? (y/N): " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
   echo "❌ Installation cancelled"
