@@ -45,12 +45,12 @@ if [ -z "$MOD_URL" ] || [ "$MOD_URL" = "null" ]; then
   exit 1
 fi
 
-echo "🧩 Mod found"
+echo "🧩 Found mod: $MOD_FILE"
 read -p "⬇️ Proceed with installation? (y/N): " confirm
 [[ "$confirm" != "y" && "$confirm" != "Y" ]] && echo "❌ Cancelled" && exit 0
 
-mkdir -p mods
-curl -L "$MOD_URL" -o "mods/$MOD_FILE"
+mkdir -p run/mods
+curl -L "$MOD_URL" -o "run/mods/$MOD_FILE"
 echo "✅ Installed: $MOD_FILE"
 
 for dep in $DEPENDENCIES; do
