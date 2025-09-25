@@ -1,4 +1,8 @@
 #!/bin/bash
-echo "alias start='unset JAVA_HOME && ./gradlew runClient'" >> ~/.zshrc
-source ~/.zshrc
-echo "'start' command is now available. Type: start"
+DOWNLOADS=~/Downloads
+MODS=./mods
+
+# Move all .jar files from Downloads to mods/
+find "$DOWNLOADS" -maxdepth 1 -name "*.jar" -exec mv {} "$MODS" \;
+
+echo "✅ Mods imported from Downloads to ./mods/"
