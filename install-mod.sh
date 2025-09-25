@@ -10,6 +10,11 @@ if [ -z "$MOD_INPUT" ]; then
   exit 1
 fi
 
+# Function to decode URL-encoded filenames
+decode_filename() {
+  printf '%b' "${1//%/\\x}"
+}
+
 # Handle direct Modrinth URL
 if [[ "$MOD_INPUT" == https://modrinth.com/mod/* ]]; then
   echo "🔗 Direct Modrinth URL detected"
@@ -18,7 +23,7 @@ if [[ "$MOD_INPUT" == https://modrinth.com/mod/* ]]; then
 
   VERSION_DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_SLUG/version/$VERSION_SLUG")
   MOD_URL=$(echo "$VERSION_DATA" | jq -r '.files[0].url')
-  MOD_FILE=$(basename "$MOD_URL")
+  MOD_FILE=$(decode_filename "$(basename "$MOD_URL")")
   DEPENDENCIES=$(echo "$VERSION_DATA" | jq -r '.dependencies[]?.project_id')
 else
   echo "🔍 Searching Modrinth for '$MOD_INPUT'..."
@@ -39,7 +44,7 @@ else
   fi
 
   MOD_URL=$(echo "$MATCHED" | jq -r '.files[0].url')
-  MOD_FILE=$(basename "$MOD_URL")
+  MOD_FILE=$(decode_filename "$(basename "$MOD_URL")")
   DEPENDENCIES=$(echo "$MATCHED" | jq -r '.dependencies[]?.project_id')
 fi
 
