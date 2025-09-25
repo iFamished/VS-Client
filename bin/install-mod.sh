@@ -1,12 +1,17 @@
 #!/bin/bash
 
-MOD_INPUT="$1"
 CONFIG_FILE="config.json"
-MC_VERSION="${2:-$(jq -r '.default_version' "$CONFIG_FILE")}"
-LOADER="${3:-$(jq -r '.default_loader' "$CONFIG_FILE")}"
+
+# Defaults
+DEFAULT_LOADER="fabric"
+DEFAULT_VERSION="1.21.8"
+
+MOD_INPUT="$1"
+LOADER="${2:-$DEFAULT_LOADER}"
+MC_VERSION="${3:-$DEFAULT_VERSION}"
 
 if [ -z "$MOD_INPUT" ]; then
-  echo "❌ Usage: install-mod <mod> [version] [loader]"
+  echo "❌ Usage: install-mod <mod> [loader] [version]"
   exit 1
 fi
 
@@ -51,5 +56,5 @@ echo "✅ Installed: $MOD_FILE"
 for dep in $DEPENDENCIES; do
   echo "📦 Dependency: $dep"
   read -p "⬇️ Install '$dep'? (y/N): " dep_confirm
-  [[ "$dep_confirm" == "y" || "$dep_confirm" == "Y" ]] && bash bin/install-mod.sh "$dep" "$MC_VERSION" "$LOADER"
+  [[ "$dep_confirm" == "y" || "$dep_confirm" == "Y" ]] && bash bin/install-mod.sh "$dep" "$LOADER" "$MC_VERSION"
 done
