@@ -15,35 +15,38 @@ if [[ "$MOD_INPUT" == https://modrinth.com/mod/* ]]; then
   echo "🔗 Direct Modrinth URL detected"
   MOD_SLUG=$(echo "$MOD_INPUT" | cut -d'/' -f5)
   VERSION_SLUG=$(echo "$MOD_INPUT" | cut -d'/' -f7)
+
   VERSION_DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_SLUG/version/$VERSION_SLUG")
-  MOD_URL=$(echo "$VERSION_DATA" | jq -r '.files[0].url')
+
+  MOD_URL=$(echo "$VERSION_DATA" | grep -o '"url":"[^"]*\.jar"' | cut -d'"' -f4)
   MOD_FILE=$(basename "$MOD_URL")
-  DEPENDENCIES=$(echo "$VERSION_DATA" | jq -r '.dependencies[]?.project_id')
+
+  DEPENDENCIES=$(echo "$VERSION_DATA" | grep -o '"project_id":"[^"]*"' | cut -d'"' -f4 | tail -n +2)
 else
   echo "🔍 Searching Modrinth for '$MOD_INPUT'..."
-  MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$MOD_INPUT" | jq -r '.hits[0].project_id')
+  MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$MOD_INPUT" | grep -o '"project_id":"[^"]*"' | head -1 | cut -d':' -f2 | tr -d '"')
 
   if [ -z "$MOD_ID" ]; then
     echo "❌ Mod '$MOD_INPUT' not found"
     exit 1
   fi
 
-  echo "📋 Fetching latest matching version..."
-  VERSIONS=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID/version")
+  VERSION_DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID/version")
 
-  FILTER=".[]"
+  # Filter by loader and version if provided
+  FILTERED=$(echo "$VERSION_DATA" | grep -o '{[^}]*"files":[^}]*}' | grep '\.jar' | head -1)
+
   if [ -n "$LOADER" ]; then
-    FILTER="$FILTER | select(.loaders[] == \"$LOADER\")"
+    echo "$FILTERED" | grep -q "$LOADER" || FILTERED=""
   fi
   if [ -n "$MC_VERSION" ]; then
-    FILTER="$FILTER | select(.game_versions[] == \"$MC_VERSION\")"
+    echo "$FILTERED" | grep -q "$MC_VERSION" || FILTERED=""
   fi
 
-  MATCHED=$(echo "$VERSIONS" | jq "$FILTER" | head -1)
-
-  MOD_URL=$(echo "$MATCHED" | jq -r '.files[0].url')
+  MOD_URL=$(echo "$FILTERED" | grep -o '"url":"[^"]*\.jar"' | cut -d'"' -f4)
   MOD_FILE=$(basename "$MOD_URL")
-  DEPENDENCIES=$(echo "$MATCHED" | jq -r '.dependencies[]?.project_id')
+
+  DEPENDENCIES=$(echo "$FILTERED" | grep -o '"project_id":"[^"]*"' | cut -d'"' -f4 | tail -n +2)
 fi
 
 if [ -z "$MOD_URL" ]; then
