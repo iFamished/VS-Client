@@ -12,13 +12,10 @@ else
 fi
 echo "💻 OS detected and saved to .osinfo"
 
-# Step 3: Create 'start' alias in shell config
-ALIAS_CMD="alias start='bash $(pwd)/start.sh'"
-if ! grep -Fxq "$ALIAS_CMD" ~/.zshrc; then
-  echo "$ALIAS_CMD" >> ~/.zshrc
-  echo "🔗 'start' alias added to ~/.zshrc"
-fi
-
-# Reload shell config
+# Step 3: Create aliases
+echo "alias start='bash $(pwd)/start.sh'" >> ~/.zshrc
+echo "alias import-mods='bash $(pwd)/import-mods.sh'" >> ~/.zshrc
+echo "alias import-mrpack='bash $(pwd)/import-mrpack.sh'" >> ~/.zshrc
 source ~/.zshrc
-echo "✅ Setup complete. You can now type: start"
+
+echo "✅ Setup complete. You can now use: start, import-mods, import-mrpack"
