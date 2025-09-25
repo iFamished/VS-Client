@@ -1,40 +1,82 @@
 #!/bin/bash
 
-MOD_NAME="$1"
-if [ -z "$MOD_NAME" ]; then
-  echo "❌ Please provide a mod name. Example: install-mod sodium"
+MOD_INPUT="$1"
+MC_VERSION="$2"
+LOADER="$3"
+
+if [ -z "$MOD_INPUT" ]; then
+  echo "❌ Usage: install-mod <mod> [version] [loader]"
+  echo "Example: install-mod sodium 1.21.8 fabric"
   exit 1
 fi
 
-echo "🔍 Searching Modrinth for '$MOD_NAME' (Fabric 1.21.8)..."
+# Check if input is a Modrinth URL
+if [[ "$MOD_INPUT" == https://modrinth.com/mod/* ]]; then
+  echo "🔗 Direct Modrinth URL detected"
+  MOD_SLUG=$(echo "$MOD_INPUT" | cut -d'/' -f5)
+  VERSION_SLUG=$(echo "$MOD_INPUT" | cut -d'/' -f7)
+  VERSION_DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_SLUG/version/$VERSION_SLUG")
+  MOD_URL=$(echo "$VERSION_DATA" | jq -r '.files[0].url')
+  MOD_FILE=$(basename "$MOD_URL")
+else
+  echo "🔍 Searching Modrinth for '$MOD_INPUT'..."
+  MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$MOD_INPUT" | jq -r '.hits[0].project_id')
 
-# Get project ID
-MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$MOD_NAME" | grep -o '"project_id":"[^"]*"' | head -1 | cut -d':' -f2 | tr -d '"')
+  if [ -z "$MOD_ID" ]; then
+    echo "❌ Mod '$MOD_INPUT' not found"
+    exit 1
+  fi
 
-if [ -z "$MOD_ID" ]; then
-  echo "❌ Mod '$MOD_NAME' not found on Modrinth"
-  exit 1
+  echo "📋 Fetching available versions..."
+  VERSIONS=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID/version")
+
+  FILTER=".[]"
+  if [ -n "$LOADER" ]; then
+    FILTER="$FILTER | select(.loaders[] == \"$LOADER\")"
+  fi
+  if [ -n "$MC_VERSION" ]; then
+    FILTER="$FILTER | select(.game_versions[] == \"$MC_VERSION\")"
+  fi
+
+  MATCHED=$(echo "$VERSIONS" | jq "$FILTER")
+
+  COUNT=$(echo "$MATCHED" | jq length)
+  if [ "$COUNT" -eq 0 ]; then
+    echo "❌ No matching versions found"
+    exit 1
+  fi
+
+  echo "🧩 Select a version to install:"
+  echo "$MATCHED" | jq -r '.[].name' | nl -w2 -s'. '
+
+  read -p "Enter version number (1-$COUNT): " choice
+  INDEX=$((choice - 1))
+
+  MOD_URL=$(echo "$MATCHED" | jq -r ".[$INDEX].files[0].url")
+  MOD_FILE=$(basename "$MOD_URL")
+  DEPENDENCIES=$(echo "$MATCHED" | jq -r ".[$INDEX].dependencies[]?.project_id")
 fi
 
-# Get version info filtered by loader and game version
-VERSION_URL="https://api.modrinth.com/v2/project/$MOD_ID/version"
-MOD_URL=$(curl -s "$VERSION_URL" | jq -r '.[] | select(.loaders[] == "fabric") | select(.game_versions[] == "1.21.8") | .files[0].url' | head -1)
-
-if [ -z "$MOD_URL" ]; then
-  echo "❌ No Fabric 1.21.8 version found for '$MOD_NAME'"
-  exit 1
-fi
-
-MOD_FILE=$(basename "$MOD_URL")
-echo "🧩 Found mod: $MOD_FILE"
-
-# ✅ Confirmation prompt
-read -p "⬇️ Do you want to install '$MOD_FILE' into your mods folder? (y/N): " confirm
+echo "🧩 Selected mod: $MOD_FILE"
+read -p "⬇️ Install '$MOD_FILE' into your mods folder? (y/N): " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
   echo "❌ Installation cancelled"
   exit 0
 fi
 
-# Proceed with download
 curl -L "$MOD_URL" -o "mods/$MOD_FILE"
 echo "✅ Installed mod: $MOD_FILE"
+
+# 🔄 Auto-install dependencies
+if [ -n "$DEPENDENCIES" ]; then
+  echo "📦 Dependencies detected:"
+  for dep in $DEPENDENCIES; do
+    echo "  - $dep"
+    read -p "⬇️ Install dependency '$dep'? (y/N): " dep_confirm
+    if [[ "$dep_confirm" == "y" || "$dep_confirm" == "Y" ]]; then
+      bash install-mod.sh "$dep" "$MC_VERSION" "$LOADER"
+    else
+      echo "❌ Skipped dependency: $dep"
+    fi
+  done
+fi
