@@ -19,25 +19,36 @@ decode_filename() {
   printf '%b' "${1//%/\\x}"
 }
 
-if [[ "$MOD_INPUT" == https://modrinth.com/mod/* ]]; then
-  MOD_SLUG=$(echo "$MOD_INPUT" | cut -d'/' -f5)
-  VERSION_SLUG=$(echo "$MOD_INPUT" | cut -d'/' -f7)
-  DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_SLUG/version/$VERSION_SLUG")
-else
-  MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$MOD_INPUT" | jq -r '.hits[0].project_id')
+clean_filename() {
+  echo "$1" | sed \
+    -e 's/&/and/g' \
+    -e 's/+/plus/g' \
+    -e 's/%20/ /g' \
+    -e 's/[^a-zA-Z0-9._-]/_/g'
+}
 
-  if [ -z "$MOD_ID" ] || [ "$MOD_ID" = "null" ]; then
-    echo "❌ No matching mod found for '$MOD_INPUT'"
-    exit 1
-  fi
+normalize_mod_name() {
+  echo "$1" | tr '[:upper:]' '[:lower:]' | sed \
+    -e 's/&/and/g' \
+    -e 's/[^a-zA-Z0-9]/ /g' \
+    -e 's/[[:space:]]\+/-/g'
+}
 
-  DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID/version" | \
-    jq --arg loader "$LOADER" --arg mc "$MC_VERSION" \
-    '[.[] | select(.loaders[] == $loader) | select(.game_versions[] == $mc)][0]')
+NORMALIZED_QUERY=$(normalize_mod_name "$MOD_INPUT")
+
+MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$NORMALIZED_QUERY" | jq -r '.hits[0].project_id')
+
+if [ -z "$MOD_ID" ] || [ "$MOD_ID" = "null" ]; then
+  echo "❌ No matching mod found for '$MOD_INPUT'"
+  exit 1
 fi
 
+DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID/version" | \
+  jq --arg loader "$LOADER" --arg mc "$MC_VERSION" \
+  '[.[] | select(.loaders[] == $loader) | select(.game_versions[] == $mc)][0]')
+
 MOD_URL=$(echo "$DATA" | jq -r '.files[0].url')
-MOD_FILE=$(decode_filename "$(basename "$MOD_URL")")
+MOD_FILE=$(clean_filename "$(decode_filename "$(basename "$MOD_URL")")")
 DEPENDENCIES=$(echo "$DATA" | jq -r '.dependencies[]?.project_id')
 
 if [ -z "$MOD_URL" ] || [ "$MOD_URL" = "null" ]; then
