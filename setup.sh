@@ -31,7 +31,6 @@ for shellrc in "$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.config/fish/config.fish"; 
     echo "alias start='bash $(pwd)/start.sh'" >> "$shellrc"
     echo "alias import-mods='bash $(pwd)/import-mods.sh'" >> "$shellrc"
     echo "alias import-mrpack='bash $(pwd)/import-mrpack.sh'" >> "$shellrc"
-    echo "alias doctor='bash $(pwd)/doctor.sh'" >> "$shellrc"
     echo "alias reset='bash $(pwd)/reset.sh'" >> "$shellrc"
     echo "alias preview='bash $(pwd)/preview.sh'" >> "$shellrc"
     echo "alias update-mods='bash $(pwd)/update-mods.sh'" >> "$shellrc"
