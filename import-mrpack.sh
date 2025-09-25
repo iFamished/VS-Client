@@ -12,11 +12,15 @@ echo "🔍 Searching for .mrpack files in $DOWNLOADS..."
 find "$DOWNLOADS" -maxdepth 1 -iname "*.mrpack" | while read -r PACK; do
   echo "📦 Unpacking $PACK..."
   mkdir -p "$TEMP"
-  unzip -o "$PACK" -d "$TEMP"
+  unzip -o "$PACK" -d "$TEMP" > /dev/null
 
-  # Validate Minecraft version
-  VERSION=$(jq -r '.gameVersions[]' "$TEMP/modrinth.index.json" | grep -E '^1\.21\.8$')
-  if [ -z "$VERSION" ]; then
+  # Validate Minecraft version using grep
+  VERSION_LINE=$(grep -E '"gameVersions":\s*
+
+\[.*\]
+
+' "$TEMP/modrinth.index.json")
+  if ! echo "$VERSION_LINE" | grep -q "1.21.8"; then
     echo "❌ Skipping $PACK — incompatible Minecraft version"
     rm -rf "$TEMP"
     continue
