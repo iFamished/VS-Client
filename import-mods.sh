@@ -1,17 +1,11 @@
 #!/bin/bash
 
-# Detect OS and set Downloads path
-if [[ "$OS" == "Windows_NT" ]] || grep -q Microsoft /proc/version 2>/dev/null; then
-  # Windows (Git Bash or WSL)
-  DOWNLOADS="/mnt/c/Users/$USERNAME/Downloads"
-else
-  # macOS/Linux
-  DOWNLOADS="$HOME/Downloads"
-fi
+OS=$(cat .osinfo)
+DOWNLOADS="$HOME/Downloads"
+[[ "$OS" == "windows" ]] && DOWNLOADS="/mnt/c/Users/$USERNAME/Downloads"
 
 MODS="./mods"
 
-# Move all .jar files from Downloads to mods/
-find "$DOWNLOADS" -maxdepth 1 -name "*.jar" -exec mv {} "$MODS" \;
-
-echo "✅ Mods imported from $DOWNLOADS to $MODS"
+echo "📦 Scanning $DOWNLOADS for Fabric 1.21.8 mods..."
+find "$DOWNLOADS" -maxdepth 1 -iname "*fabric*1.21.8*.jar" -exec mv {} "$MODS" \;
+echo "✅ Mods moved to $MODS"
