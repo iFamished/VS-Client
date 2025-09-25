@@ -38,9 +38,16 @@ NORMALIZED_QUERY=$(normalize_mod_name "$MOD_INPUT")
 
 MOD_ID=$(curl -s "https://api.modrinth.com/v2/search?query=$NORMALIZED_QUERY" | jq -r '.hits[0].project_id')
 
+# Fallback: try using normalized slug directly if search fails
 if [ -z "$MOD_ID" ] || [ "$MOD_ID" = "null" ]; then
-  echo "❌ No matching mod found for '$MOD_INPUT'"
-  exit 1
+  MOD_ID="$NORMALIZED_QUERY"
+  TEST=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID")
+  if echo "$TEST" | jq -e '.project_id' >/dev/null 2>&1; then
+    echo "🔍 Using slug fallback: $MOD_ID"
+  else
+    echo "❌ No matching mod found for '$MOD_INPUT'"
+    exit 1
+  fi
 fi
 
 DATA=$(curl -s "https://api.modrinth.com/v2/project/$MOD_ID/version" | \
