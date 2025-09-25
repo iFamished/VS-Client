@@ -9,11 +9,14 @@ fi
 
 MODS="./mods"
 
-# Move only Fabric 1.21.8 mods (basic filter by filename)
-find "$DOWNLOADS" -maxdepth 1 -name "*fabric*1.21.8*.jar" -exec mv {} "$MODS" \;
+# Move Fabric 1.21.8 mods into ./mods
+echo "🔍 Scanning $DOWNLOADS for Fabric 1.21.8 mods..."
+find "$DOWNLOADS" -maxdepth 1 -iname "*fabric*1.21.8*.jar" -exec mv {} "$MODS" \;
 
-echo "✅ Fabric 1.21.8 mods imported from $DOWNLOADS to $MODS"
+echo "✅ Mods moved to $MODS"
 
 # Clear JAVA_HOME and launch client
 unset JAVA_HOME
+echo "🧼 JAVA_HOME cleared"
+echo "🚀 Launching VS-Client..."
 ./gradlew runClient
